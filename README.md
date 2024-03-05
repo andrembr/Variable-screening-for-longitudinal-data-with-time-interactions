@@ -1,4 +1,5 @@
 
+Code to reproduce the simulated examples in manuscript "Conditional variable screening for ultra-high dimensional longitudinal data with time interactions"
 
 Structure of folders and files:
 
