@@ -10,17 +10,16 @@ source("get_results_simulations.R")
 args_user <- commandArgs(trailingOnly=TRUE) # takes two arguments from the console: the example number and the number of simulations
 example <- args_user[1] # which example number? must put either ex1, ex2 or ex3
 ns_all <- c(40,80,100) # number of subjects
-methods <- c("GEES","BCor-SIS","LS") # the methods that we compare
+methods <- c("GEES","BCor-SIS","LS","CDC-SIS") # the methods that we compare
 sigmabs <- c(0.1,0.9) # sd of the random effects
 no_sim <- as.numeric(args_user[2]) # the number of simulations
 no_cores <- 12
-
 
 # iterate through both values of sigmab and different values for ns
 full.results <- c()
 for(sigmab in sigmabs){
   for(ns in ns_all){
-    args <- c(1000,ns,sigmab,0.1,no_sim)
+    args <- c(1000, ns, sigmab, 0.1, no_sim)
     for(method in methods){
       print(paste("Method: ", method))
       
@@ -49,7 +48,7 @@ for(sigmab in sigmabs){
         }
       }
       
-      # else the method is bcor-sis
+      # else the method is bcor-sis or cdc-sis
       else{
         cl <- makeCluster(no_cores,type="FORK")
         registerDoParallel(cl)
