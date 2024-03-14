@@ -1,8 +1,5 @@
 library(MASS)
 library(geepack)
-library(doParallel)
-library(lme4)
-
 
 #ar(1)
 ar1_cor <- function(n, alpha) {
