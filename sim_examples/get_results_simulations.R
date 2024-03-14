@@ -4,9 +4,9 @@ library(doParallel)
 library(foreach)
 library(lme4)
 library(Ball)
+library(cdcsis)
 
 source("simulate_examples.R")
-
 
 
 get_MMS <- function(p, A0, I0, ranked_features){   # function to get the minimum model size
@@ -35,7 +35,7 @@ one_simulation <- function(i = 1, p, k, ns, sigmab, sigmae, example, method, cor
     tau0 <- 0.8
   }
   
-  else if (example == "ex3"){.  # set the correct settings for ex3
+  else if (example == "ex3"){  # set the correct settings for ex3
     lineartime0 <- F
     randomslope0 <- F
     tau0 <- 1
@@ -71,6 +71,7 @@ one_simulation <- function(i = 1, p, k, ns, sigmab, sigmae, example, method, cor
     if (rslope == T) method <- paste0(method, "." , "slope")
     else method <- paste0(method, ".", "intercept")
   }
+  
   else if (method == "GEES"){
     source("../GEES.R")
     start <- Sys.time()
@@ -82,6 +83,7 @@ one_simulation <- function(i = 1, p, k, ns, sigmab, sigmae, example, method, cor
     screened <- ranked_features[1:d]
     method <- paste0(method, ".", corr)
   }
+  
   else if (method == "BCor-SIS"){
     start <- Sys.time()
     A.first <- bcorsis(x, y, method = "interaction") # get the marginal utility from BCor-SIS
@@ -90,6 +92,27 @@ one_simulation <- function(i = 1, p, k, ns, sigmab, sigmae, example, method, cor
     MMS <- get_MMS(p, A0, I0, ranked_features)
     screened <- ranked_features[1:d]
   }
+  
+  else if (method == "CDC-SIS"){
+    ### group the observations into a multivariate response setting ###
+    start <- Sys.time()
+    ns <- length(unique(id))
+    y.mat <- matrix(y, ncol = nlevels(as.factor(t)), byrow = T)
+    x <- as.list(as.data.frame(x))
+    x.list <- lapply(1:p, function(i) {
+      matrix(x[[i]], ncol = nlevels(as.factor(t)), byrow = T)
+    })
+    t.mat <-  matrix(as.numeric(t), ncol = nlevels(as.factor(t)), byrow = T)
+    width <- stats::bw.nrd0(as.numeric(t))
+    cdc0 <- cdcsis::cdcsis(x = x.list, y = y.mat, z = matrix(1, nrow = ns, ncol = 1)) # get the marginal utility from CDC-SIS
+    # Note that we set a constant value to condition on because it needs a non NULL value
+    ranked_features <- order(cdc0[["cdcor"]], decreasing = TRUE)
+    time <- difftime(Sys.time(), start, units = "secs")
+    MMS <- get_MMS(p, A0, I0, ranked_features)
+    screened <- ranked_features[1:d]
+  }
+    
+  
   results <- list(method = method,
                   screening_set = screened,
                   MMS = MMS, time = time,
